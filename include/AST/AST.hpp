@@ -64,6 +64,33 @@ private:
     std::vector<std::unique_ptr<ExprAST>> Args;
 };
 
+//----------------------------------------------------------
+// STATEMENTS
+//----------------------------------------------------------
+
+class StatementAST {
+public:
+    virtual ~StatementAST();
+};
+
+class ExprStatementAST : public StatementAST {
+public:
+    explicit ExprStatementAST(std::unique_ptr<ExprAST> Expr);
+
+private:
+    std::unique_ptr<ExprAST> Expr;
+};
+
+class BlockStatementAST : public StatementAST {
+public:
+    BlockStatementAST(std::vector<std::unique_ptr<StatementAST>> Statements);
+
+private:
+    std::vector<std::unique_ptr<StatementAST>> Statements;
+};
+
+
+
 class PrototypeAST {
 public:
     PrototypeAST(std::string Name, std::vector<std::string> Args);
@@ -79,23 +106,11 @@ private:
 class FunctionAST {
 public:
     FunctionAST(std::unique_ptr<PrototypeAST> Proto,
-                std::unique_ptr<ExprAST> Body);
-
+                std::unique_ptr<StatementAST> Body);
 private:
     std::unique_ptr<PrototypeAST> Proto;
-    // move to block expression ast at some point
-    std::unique_ptr<ExprAST> Body;
+    // move to block expression ast at some point; update: should be done
+    std::unique_ptr<StatementAST> Body;
 };
-
-//----------------------------------------------------------
-// STATEMENTS
-//----------------------------------------------------------
-
-class StatementAST {
-public:
-    ~StatementAST();
-};
-
-
 
 #endif //ABHEEK_LANG_AST_HPP

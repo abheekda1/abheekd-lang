@@ -25,8 +25,13 @@ CallExprAST::CallExprAST(std::string Callee, std::vector<std::unique_ptr<ExprAST
 PrototypeAST::PrototypeAST(std::string Name, std::vector<std::string> Args)
                            : Name(std::move(Name)), Args(std::move(Args)) {}
 
-FunctionAST::FunctionAST(std::unique_ptr<PrototypeAST> Proto, std::unique_ptr<ExprAST> Body)
+FunctionAST::FunctionAST(std::unique_ptr<PrototypeAST> Proto, std::unique_ptr<StatementAST> Body)
                          : Proto(std::move(Proto)), Body(std::move(Body)) {}
+
 
 StatementAST::~StatementAST() = default;
 
+ExprStatementAST::ExprStatementAST(std::unique_ptr<ExprAST> Expr) : Expr(std::move(Expr)) {}
+
+BlockStatementAST::BlockStatementAST(std::vector<std::unique_ptr<StatementAST>> Statements)
+                                     : Statements(std::move(Statements)) {}

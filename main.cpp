@@ -1,4 +1,4 @@
-
+#include <iostream>
 #include "Lexer/Lexer.hpp"
 #include "Parser/Parser.hpp"
 #include "Token/Token.hpp"
@@ -56,7 +56,11 @@ static void MainLoop() {
 
 
 int main() {
-    Lexer::Source = "extern sin(a);";
+    Lexer::Source = "func thing(arg1 arg2)\n"
+                    "{\n"
+                    "body;\n"
+                    "};\n";
+
     Token currentTok;
     while ((currentTok = Lexer::getTok()).type != Token::type::tok_eof) {
         printf("%3d:%-3d %10s %10d\n",

@@ -162,7 +162,7 @@ std::unique_ptr<FunctionAST> Parser::ParseFuncDefinition() {
     if (!Proto) return nullptr;
 
     // TODO: add block expression
-    if (auto E = ParseExpression())
+    if (auto E = ParseStatement())
         return std::make_unique<FunctionAST>(std::move(Proto), std::move(E));
     return nullptr;
 }
@@ -170,4 +170,36 @@ std::unique_ptr<FunctionAST> Parser::ParseFuncDefinition() {
 std::unique_ptr<PrototypeAST> Parser::ParseExtern() {
     getNextToken(); // eat extern
     return ParsePrototype();
+}
+
+std::unique_ptr<StatementAST> Parser::ParseStatement() {
+    if (CurrentToken.value == "{") {
+        return ParseBlockStatement();
+    }
+    return ParseExprStatement();
+}
+
+std::unique_ptr<StatementAST> Parser::ParseExprStatement() {
+    if (auto E = ParseExpression()) {
+        if (CurrentToken.value != ";") {
+            throw std::runtime_error("parser error: missing semicolon at the end of statement");
+        }
+        getNextToken(); // eat ';'
+        return std::make_unique<ExprStatementAST>(std::move(E));
+    }
+    return nullptr;
+}
+
+std::unique_ptr<StatementAST> Parser::ParseBlockStatement() {
+    getNextToken(); // eat {
+    std::vector<std::unique_ptr<StatementAST>> Statements;
+    while (CurrentToken.value != "}") {
+        if (auto V = ParseStatement())
+            Statements.push_back(std::move(V));
+        else
+            return nullptr;
+    }
+
+    getNextToken(); // eat }
+    return std::make_unique<BlockStatementAST>(std::move(Statements));
 }
