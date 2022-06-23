@@ -114,15 +114,15 @@ Value *CallExprAST::codegen() {
     return Builder->CreateCall(CalleeF, ArgsV, "call_tmp");
 }
 
-PrototypeAST::PrototypeAST(std::string Name, std::vector<std::string> Args, std::string ReturnType)
-                           : Name(std::move(Name)), Args(std::move(Args)), ReturnType(std::move(ReturnType)) {}
+PrototypeAST::PrototypeAST(std::string Name, std::vector<std::string> Args, std::string ReturnType, bool ReturnPointer)
+                           : Name(std::move(Name)), Args(std::move(Args)), ReturnType(std::move(ReturnType)), ReturnPointer(ReturnPointer) {}
 
 llvm::Function *PrototypeAST::codegen() {
     // todo: specify types for args
     std::vector<Type*> Doubles(Args.size(),
                                Type::getDoubleTy(*TheContext));
     auto RetType = this->getReturnType(*TheContext);
-    if (!RetType) return nullptr;
+    if (!RetType) throw std::runtime_error("codegen error: invalid return type");
     FunctionType *FuncType =
             FunctionType::get(RetType, Doubles, false);
     Function *F =
