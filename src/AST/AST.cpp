@@ -173,7 +173,8 @@ llvm::Function *FunctionAST::codegen() {
         CurrentFuncNamedValues[Arg.getName().str()] = &Arg;
 
     if (Value *RetVal = Body->codegen()) {
-        Builder->CreateRet(RetVal);
+        auto RetFinal = Builder->CreateFPToSI(RetVal, TheFunction->getReturnType());
+        Builder->CreateRet(RetFinal);
 
         // Validate the generated code, checking for consistency.
         llvm::verifyFunction(*TheFunction);
