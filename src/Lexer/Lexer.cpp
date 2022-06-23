@@ -68,6 +68,7 @@ Token Lexer::getTok() {
             } else {
                 foundPoint = (LastChar == '.');
             }
+
             t.value += LastChar;
         }
 
@@ -92,6 +93,23 @@ Token Lexer::getTok() {
         CharIdx++; // move past second mark
         Position.column++;
 
+        return t;
+    }
+
+    if (Token::BinOpPrecedence[{LastChar}]) { // check if first char is op
+        Token t(Token::type::tok_binop);
+        t.value = {LastChar};
+        t.position = Position;
+
+        CharIdx++; // move past first char
+
+        while (Token::BinOpPrecedence[{(LastChar = Source[CharIdx++])}]) {
+            t.value += LastChar;
+        }
+
+        CharIdx--; // go back one since one was added after the while loop
+
+        Position.column += (int)t.value.length();
         return t;
     }
 

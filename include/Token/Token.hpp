@@ -5,6 +5,7 @@
 #ifndef ABHEEK_LANG_TOKEN_HPP
 #define ABHEEK_LANG_TOKEN_HPP
 
+#include <map>
 #include <string>
 
 struct position {
@@ -28,6 +29,9 @@ public:
         tok_number = -21,
         tok_string = -22,
 
+        // operators
+        tok_binop = -40,
+
         //other
         tok_other = -100
     };
@@ -35,6 +39,12 @@ public:
     Token();
     explicit Token(type type);
     Token(type type, std::string value, position position);
+
+    static std::map<std::string, int> BinOpPrecedence;
+    static void InitBinOps();
+
+    int GetPrecedence();
+    inline bool IsBinOp() const { return BinOpPrecedence[value]; }
 
     type type;
     std::string value;

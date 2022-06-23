@@ -14,7 +14,7 @@
 class Parser {
 public:
     // ctor
-    Parser();
+    // Parser();
 
     static inline Token getNextToken() { return CurrentToken = Lexer::getTok(); }
     static Token CurrentToken;
@@ -32,10 +32,6 @@ public:
     static std::unique_ptr<PrototypeAST> ParsePrototype();
     static std::unique_ptr<FunctionAST> ParseFuncDefinition();
     static std::unique_ptr<PrototypeAST> ParseExtern();
-
-    static int GetTokenPrecedence();
-
-    static std::map<char, int> BinOpPrecedence;
 
     static std::unique_ptr<ExprAST> ParseBinOpRight(int Precedence, std::unique_ptr<ExprAST> Left);
     // EXPRESSION END

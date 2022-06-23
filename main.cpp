@@ -89,8 +89,14 @@ int main() {
     Lexer("extern puts(in : s1*) : s4;\n"
           "func main() : s4 {\n"
           "\tputs(\"hello world!\");\n"
-          "\treturn 0;\n"
-          "}\n");
+          "\treturn \"heheheha\";\n"
+          "}\n"
+          "func thing(arg1 : s4, arg2 : s4) : s4 {\n"
+          "\targ1 + arg2;\n"
+          "\treturn arg1 + arg2 * 6.0;\n"
+          "};\n"
+          "\n"
+          "thing(1.0, 2.0);");
 
     std::cout << "SOURCE:\n---\n" << Lexer::Source << "\n---\n" << std::endl;
 
@@ -98,6 +104,9 @@ int main() {
 
     printf("%3s:%-3s %10s %10s\n", "ROW", "COL", "TOKEN", "TYPE");
     fflush(stdout);
+
+    Token::InitBinOps();
+
     Token currentTok;
     while ((currentTok = Lexer::getTok()).type != Token::type::tok_eof) {
         printf("%3d:%-3d %10s %10d\n",
@@ -123,5 +132,5 @@ int main() {
 
     MainLoop();
 
-    SaveModuleToFile("place");
+    SaveModuleToFile("place.ll");
 }

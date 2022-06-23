@@ -3,23 +3,14 @@
 //
 
 #include <limits>
+#include <string>
 
 #include "Parser/Parser.hpp"
 
-std::map<char, int> Parser::BinOpPrecedence;
 Token Parser::CurrentToken;
 
-Parser::Parser() {
-    BinOpPrecedence['*'] = 5;
-    BinOpPrecedence['/'] = 5;
-    BinOpPrecedence['%'] = 5;
-
-    BinOpPrecedence['+'] = 6;
-    BinOpPrecedence['-'] = 6;
-}
-
 std::unique_ptr<ExprAST> Parser::ParseNumberExpr() {
-    auto ret = std::make_unique<NumberExprAST>(std::stod(CurrentToken.value));
+    auto ret = std::make_unique<NumberExprAST>(CurrentToken.value);
     getNextToken(); // eat literal
     return ret;
 }
@@ -98,19 +89,9 @@ std::unique_ptr<ExprAST> Parser::ParseExpression() {
     return ParseBinOpRight(std::numeric_limits<int>::max() - 1, std::move(Left));
 }
 
-int Parser::GetTokenPrecedence() {
-    if (!isascii(CurrentToken.value.at(0)))
-        return std::numeric_limits<int>::max();
-
-    // make sure it has been declared
-    int TokenPrecedence = BinOpPrecedence[CurrentToken.value.at(0)];
-    if (TokenPrecedence <= 0) return std::numeric_limits<int>::max();
-    return TokenPrecedence;
-}
-
 std::unique_ptr<ExprAST> Parser::ParseBinOpRight(int ExprPrecedence, std::unique_ptr<ExprAST> Left) {
     while (true) {
-        int TokenPrecedence = GetTokenPrecedence();
+        int TokenPrecedence = CurrentToken.GetPrecedence();
 
         if (TokenPrecedence > ExprPrecedence)
             return Left;
@@ -124,7 +105,7 @@ std::unique_ptr<ExprAST> Parser::ParseBinOpRight(int ExprPrecedence, std::unique
             return nullptr;
 
         // determine association
-        int NextPrecedence = GetTokenPrecedence();
+        int NextPrecedence = CurrentToken.GetPrecedence();
         if (TokenPrecedence > NextPrecedence) {
             Right = ParseBinOpRight(TokenPrecedence - 1, std::move(Right));
             if (!Right)

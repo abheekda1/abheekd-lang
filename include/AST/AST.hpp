@@ -66,11 +66,11 @@ public:
 // numeric literal expressions
 class NumberExprAST : public ExprAST {
 public:
-    explicit NumberExprAST(double Value);
+    explicit NumberExprAST(std::string Value);
     llvm::Value *codegen() override;
 
 private:
-    double Value{};
+    std::string Value;
 };
 
 // string literal expressions

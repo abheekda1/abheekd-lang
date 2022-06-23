@@ -8,8 +8,10 @@
 #include <llvm/IR/Verifier.h>
 
 using llvm::APFloat;
+using llvm::APInt;
 using llvm::BasicBlock;
 using llvm::ConstantFP;
+using llvm::ConstantInt;
 using llvm::StringRef;
 using llvm::FunctionType;
 using llvm::Value;
@@ -43,10 +45,12 @@ void SaveModuleToFile(const std::string& path) {
 
 ExprAST::~ExprAST() = default;
 
-NumberExprAST::NumberExprAST(double Value) : Value(Value) {}
+NumberExprAST::NumberExprAST(std::string Value) : Value(std::move(Value)) {}
 Value *NumberExprAST::codegen() {
+    if (this->Value.find('.') != std::string::npos)
+        return ConstantFP::get(*TheContext, APFloat(stod(Value)));
     // todo: contextual casting so it's not always floats
-    return ConstantFP::get(*TheContext, APFloat(Value));
+    return ConstantInt::get(*TheContext, APInt(sizeof(long long) * 8, stoll(Value)));
 }
 
 StringExprAST::StringExprAST(std::string Value) : Value(std::move(Value)) {}
@@ -68,7 +72,7 @@ Value *VariableExprAST::codegen() {
     return V;
 }
 
-BinaryExprAST::BinaryExprAST(Token  Op, std::unique_ptr<ExprAST> Left,
+BinaryExprAST::BinaryExprAST(Token Op, std::unique_ptr<ExprAST> Left,
                              std::unique_ptr<ExprAST> Right)
                              : Op(std::move(Op)), Left(std::move(Left)),
                              Right(std::move(Right)) {}
@@ -78,22 +82,49 @@ Value *BinaryExprAST::codegen() {
     if (!L || !R)
         return nullptr;
 
-    // todo: string ops
-    switch (Op.value.at(0)) {
-        case '+':
-            return Builder->CreateFAdd(L, R, "add_tmp");
-        case '-':
-            return Builder->CreateFSub(L, R, "sub_tmp");
-        case '*':
-            return Builder->CreateFMul(L, R, "mul_tmp");
-        case '<':
-            L = Builder->CreateFCmpULT(L, R, "cmp_tmp");
-            // Convert bool 0/1 to double 0.0 or 1.0
-            return Builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*TheContext),
-                                        "bool_tmp");
-        default:
-            throw std::runtime_error("codegen error: unknown operator");
+    // casting literals
+    if (!L->hasName() != !R->hasName()) { // one or the other is constant
+        // if they aren't the same let llvm deal with the different types and error
+        if ((L->getType()->isIntegerTy() && R->getType()->isIntegerTy())
+            || (L->getType()->isFloatingPointTy() && R->getType()->isFloatingPointTy())) {
+            if (!L->hasName()) {
+                if (L->getType()->isIntegerTy())
+                    L = Builder->CreateIntCast(L, R->getType(), true);
+                else if (L->getType()->isFloatingPointTy())
+                    L = Builder->CreateFPCast(L, R->getType());
+            } else {
+                if (R->getType()->isIntegerTy())
+                    R = Builder->CreateIntCast(R, L->getType(), true);
+                else if (R->getType()->isFloatingPointTy())
+                    R = Builder->CreateFPCast(R, L->getType());
+            }
+        }
     }
+
+    // todo: string ops; done
+    // at this point they should be the same type
+    // so L type is same as R and checking one will give
+    // both
+    if (Op.value == "+") {
+        if (L->getType()->isIntegerTy()) return Builder->CreateAdd(L, R, "add_tmp");
+        else return Builder->CreateFAdd(L, R, "add_tmp");
+    } else if (Op.value == "-")
+        if (L->getType()->isIntegerTy()) return Builder->CreateSub(L, R, "sub_tmp");
+        else return Builder->CreateFSub(L, R, "sub_tmp");
+    else if (Op.value == "*")
+        if (L->getType()->isIntegerTy()) return Builder->CreateMul(L, R, "mul_tmp");
+        else return Builder->CreateFMul(L, R, "mul_tmp");
+    else if (Op.value == "/")
+        if (L->getType()->isIntegerTy()) return Builder->CreateSDiv(L, R, "div_tmp");
+        else return Builder->CreateFDiv(L, R, "div_tmp");
+    else if (Op.value == "<")
+        if (L->getType()->isIntegerTy()) return Builder->CreateICmpSLT(L, R, "lt_tmp");
+        else return Builder->CreateFCmpULT(L, R, "lt_tmp");
+    else if (Op.value == ">")
+        if (L->getType()->isIntegerTy()) return Builder->CreateICmpSGT(L, R, "gt_tmp");
+        else return Builder->CreateFCmpUGT(L, R, "gt_tmp");
+    else
+        throw std::runtime_error("codegen error: unknown operator");
 }
 
 CallExprAST::CallExprAST(std::string Callee, std::vector<std::unique_ptr<ExprAST>> Args)
