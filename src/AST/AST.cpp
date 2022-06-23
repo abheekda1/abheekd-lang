@@ -45,6 +45,7 @@ ExprAST::~ExprAST() = default;
 
 NumberExprAST::NumberExprAST(double Value) : Value(Value) {}
 Value *NumberExprAST::codegen() {
+    // todo: contextual casting so it's not always floats
     return ConstantFP::get(*TheContext, APFloat(Value));
 }
 
