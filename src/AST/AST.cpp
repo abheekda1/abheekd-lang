@@ -23,7 +23,8 @@ using llvm::Type;
 static std::unique_ptr<LLVMContext> TheContext;
 static std::unique_ptr<IRBuilder<>> Builder;
 static std::unique_ptr<Module> TheModule;
-static std::map<std::string, Value *> NamedValues;
+static std::map<std::string, Value *> CurrentFuncNamedValues;
+static std::map<std::string, Value *> GlobalNamedValues;
 
 void InitializeModule() {
     // Open a new context and module.
@@ -56,7 +57,7 @@ llvm::Value *StringExprAST::codegen() {
 VariableExprAST::VariableExprAST(std::string Name) : Name(std::move(Name)) {}
 Value *VariableExprAST::codegen() {
     // Look this variable up in the function.
-    Value *V = NamedValues[Name];
+    Value *V = CurrentFuncNamedValues[Name];
     if (!V)
         throw std::runtime_error("codegen error: unknown variable name");
     return V;
@@ -154,9 +155,9 @@ llvm::Function *FunctionAST::codegen() {
     Builder->SetInsertPoint(BB);
 
     // Record the function arguments in the NamedValues map.
-    NamedValues.clear();
+    CurrentFuncNamedValues.clear();
     for (auto &Arg : TheFunction->args())
-        NamedValues[Arg.getName().str()] = &Arg;
+        CurrentFuncNamedValues[Arg.getName().str()] = &Arg;
 
     if (Value *RetVal = Body->codegen()) {
         Builder->CreateRet(RetVal);
@@ -206,4 +207,11 @@ ReturnStatementAST::ReturnStatementAST(std::unique_ptr<ExprAST> Argument)
 
 llvm::Value *ReturnStatementAST::codegen() {
     return this->Argument->codegen();
+}
+
+VarDeclStatementAST::VarDeclStatementAST(std::unique_ptr<ExprAST> Var, std::string Type) : Var(std::move(Var)), Type(std::move(Type)) {}
+
+// todo
+llvm::Value *VarDeclStatementAST::codegen() {
+    return nullptr;
 }

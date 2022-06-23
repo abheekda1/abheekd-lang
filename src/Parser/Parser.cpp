@@ -176,6 +176,8 @@ std::unique_ptr<StatementAST> Parser::ParseStatement() {
     switch (CurrentToken.type) {
         case Token::type::tok_return:
             return ParseReturnStatement();
+        case Token::type::tok_var:
+            return ParseVarDeclStatement();
         default:
             if (CurrentToken.value == "{") {
                 return ParseBlockStatement();
@@ -219,5 +221,21 @@ std::unique_ptr<StatementAST> Parser::ParseReturnStatement() {
         getNextToken(); // eat ';'
         return std::make_unique<ReturnStatementAST>(std::move(Arg));
     }
+
+    return nullptr;
+}
+
+std::unique_ptr<StatementAST> Parser::ParseVarDeclStatement() {
+    getNextToken(); // eat "var"
+
+    if (auto Var = ParseExpression()) {
+        if (CurrentToken.value != ":") {
+            throw std::runtime_error("parser error: expected ':' separating var name and type");
+        }
+        std::string Type = getNextToken().value; // eat ':' and get type
+        getNextToken(); // eat type
+        return std::make_unique<VarDeclStatementAST>(std::move(Var), std::move(Type));
+    }
+
     return nullptr;
 }

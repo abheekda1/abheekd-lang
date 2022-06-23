@@ -21,6 +21,7 @@ public:
         tok_func = -2,
         tok_extern = -3,
         tok_return = -4,
+        tok_var = -5,
 
         // primary
         tok_ident = -20,

@@ -33,15 +33,6 @@ public:
     static std::unique_ptr<FunctionAST> ParseFuncDefinition();
     static std::unique_ptr<PrototypeAST> ParseExtern();
 
-    static std::unique_ptr<FunctionAST> ParseTopLevelExpr() {
-        if (auto E = ParseExpression()) {
-            // make an anonymous proto
-            auto Proto = std::make_unique<PrototypeAST>("", std::vector<std::string>());
-            return std::make_unique<FunctionAST>(std::move(Proto), std::move(std::make_unique<ExprStatementAST>(std::move(E))));
-        }
-        return nullptr;
-    }
-
     static int GetTokenPrecedence();
 
     static std::map<char, int> BinOpPrecedence;
@@ -53,10 +44,9 @@ public:
     static std::unique_ptr<StatementAST> ParseStatement();
 
     static std::unique_ptr<StatementAST> ParseExprStatement();
-
     static std::unique_ptr<StatementAST> ParseBlockStatement();
-
     static std::unique_ptr<StatementAST> ParseReturnStatement();
+    static std::unique_ptr<StatementAST> ParseVarDeclStatement();
     //STATEMENT END
 };
 

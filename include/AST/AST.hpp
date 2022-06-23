@@ -119,6 +119,17 @@ private:
     std::unique_ptr<ExprAST> Argument;
 };
 
+class VarDeclStatementAST : public StatementAST {
+public:
+    // todo: enum type instead of string
+    explicit VarDeclStatementAST(std::unique_ptr<ExprAST> Var, std::string Type);
+    llvm::Value *codegen() override;
+
+private:
+    std::unique_ptr<ExprAST> Var;
+    std::string Type;
+};
+
 
 
 class PrototypeAST {

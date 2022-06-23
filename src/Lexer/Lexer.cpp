@@ -47,6 +47,7 @@ Token Lexer::getTok() {
         if (t.value == "func") t.type = Token::type::tok_func;
         if (t.value == "extern") t.type = Token::type::tok_extern;
         if (t.value == "return") t.type = Token::type::tok_return;
+        if (t.value == "var") t.type = Token::type::tok_var;
 
         t.position = Position;
         Position.column += (int)t.value.length();
