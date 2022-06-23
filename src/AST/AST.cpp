@@ -35,6 +35,12 @@ void InitializeModule() {
 }
 // CODEGEN END
 
+void SaveModuleToFile(const std::string& path) {
+    std::error_code EC;
+    llvm::raw_fd_ostream out(path, EC);
+    TheModule->print(out, nullptr);
+}
+
 ExprAST::~ExprAST() = default;
 
 NumberExprAST::NumberExprAST(double Value) : Value(Value) {}
@@ -45,8 +51,7 @@ Value *NumberExprAST::codegen() {
 StringExprAST::StringExprAST(std::string Value) : Value(std::move(Value)) {}
 
 llvm::Value *StringExprAST::codegen() {
-    auto temp = StringRef("amogus");
-    return Builder->CreateGlobalStringPtr(temp);
+    return Builder->CreateGlobalStringPtr(llvm::StringRef(this->Value), "", 0, TheModule.get());
 }
 
 /*Value *StringExprAST::codegen() {

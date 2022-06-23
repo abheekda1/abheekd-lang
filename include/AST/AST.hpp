@@ -15,6 +15,7 @@
 #include "Token/Token.hpp"
 
 void InitializeModule();
+void SaveModuleToFile(const std::string& path);
 
 class Type {
 public:
