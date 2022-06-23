@@ -153,7 +153,13 @@ std::unique_ptr<PrototypeAST> Parser::ParsePrototype() {
 
     getNextToken(); // eat ')'
 
-    return std::make_unique<PrototypeAST>(Name, std::move(ArgNames));
+    if (CurrentToken.value != ":")
+        throw std::runtime_error("parser error: expected ':' before return type");
+    getNextToken(); // eat ':'
+    std::string ReturnType = CurrentToken.value;
+    getNextToken(); // eat type
+
+    return std::make_unique<PrototypeAST>(Name, std::move(ArgNames), ReturnType);
 }
 
 std::unique_ptr<FunctionAST> Parser::ParseFuncDefinition() {

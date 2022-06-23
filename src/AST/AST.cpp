@@ -114,8 +114,8 @@ Value *CallExprAST::codegen() {
     return Builder->CreateCall(CalleeF, ArgsV, "call_tmp");
 }
 
-PrototypeAST::PrototypeAST(std::string Name, std::vector<std::string> Args)
-                           : Name(std::move(Name)), Args(std::move(Args)) {}
+PrototypeAST::PrototypeAST(std::string Name, std::vector<std::string> Args, std::string ReturnType)
+                           : Name(std::move(Name)), Args(std::move(Args)), ReturnType(std::move(ReturnType)) {}
 
 llvm::Function *PrototypeAST::codegen() {
     // Make the function type:  double(double,double) etc.

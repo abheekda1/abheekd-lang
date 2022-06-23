@@ -134,7 +134,7 @@ private:
 
 class PrototypeAST {
 public:
-    PrototypeAST(std::string Name, std::vector<std::string> Args);
+    PrototypeAST(std::string Name, std::vector<std::string> Args, std::string ReturnType);
     llvm::Function *codegen();
 
     inline const std::string &getName() const { return Name; }
@@ -142,6 +142,7 @@ public:
 private:
     std::string Name;
     std::vector<std::string> Args;
+    std::string ReturnType;
 };
 
 // function definition
