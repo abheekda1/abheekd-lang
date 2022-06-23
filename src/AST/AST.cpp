@@ -17,7 +17,6 @@ using llvm::Function;
 using llvm::LLVMContext;
 using llvm::IRBuilder;
 using llvm::Module;
-using llvm::Type;
 
 // CODEGEN BEGIN
 static std::unique_ptr<LLVMContext> TheContext;
@@ -84,7 +83,7 @@ Value *BinaryExprAST::codegen() {
         case '<':
             L = Builder->CreateFCmpULT(L, R, "cmp_tmp");
             // Convert bool 0/1 to double 0.0 or 1.0
-            return Builder->CreateUIToFP(L, Type::getDoubleTy(*TheContext),
+            return Builder->CreateUIToFP(L, llvm::Type::getDoubleTy(*TheContext),
                                         "bool_tmp");
         default:
             throw std::runtime_error("codegen error: unknown operator");
@@ -114,24 +113,30 @@ Value *CallExprAST::codegen() {
     return Builder->CreateCall(CalleeF, ArgsV, "call_tmp");
 }
 
-PrototypeAST::PrototypeAST(std::string Name, std::vector<std::string> Args, std::string ReturnType, bool ReturnPointer)
-                           : Name(std::move(Name)), Args(std::move(Args)), ReturnType(std::move(ReturnType)), ReturnPointer(ReturnPointer) {}
+PrototypeAST::PrototypeAST(std::string Name, std::vector<std::pair<std::string /* name */, Type /* type */>> Args, Type ReturnType)
+                           : Name(std::move(Name)), Args(std::move(Args)), ReturnType(std::move(ReturnType)) {}
 
 llvm::Function *PrototypeAST::codegen() {
     // todo: specify types for args
-    std::vector<Type*> Doubles(Args.size(),
-                               Type::getDoubleTy(*TheContext));
-    auto RetType = this->getReturnType(*TheContext);
+    std::vector<llvm::Type*> ArgTypes(Args.size());
+    for (int i = 0; i < ArgTypes.size(); i++) {
+        if (auto ArgType = Args.at(i).second.GetLLVMType(*TheContext))
+            ArgTypes.at(i) = ArgType;
+        else
+            return nullptr;
+    }
+    auto RetType = this->ReturnType.GetLLVMType(*TheContext);
     if (!RetType) throw std::runtime_error("codegen error: invalid return type");
     FunctionType *FuncType =
-            FunctionType::get(RetType, Doubles, false);
+            FunctionType::get(RetType, ArgTypes, false);
     Function *F =
             Function::Create(FuncType, Function::ExternalLinkage, Name, TheModule.get());
 
     // Set names for all arguments.
     unsigned Idx = 0;
-    for (auto &Arg : F->args())
-        Arg.setName(Args[Idx++]);
+    for (auto &Arg : F->args()) {
+        Arg.setName(Args[Idx++].first);
+    }
 
     return F;
 }

@@ -52,6 +52,7 @@ std::unique_ptr<ExprAST> Parser::ParseIdentifierExpr() {
     // function call
     getNextToken(); // eat (
     std::vector<std::unique_ptr<ExprAST>> Args;
+    // todo: maybe `while CurrentToken.value != ")"...`
     if (CurrentToken.value != ")") {
         while (true) {
             if (auto Arg = ParseExpression())
@@ -144,26 +145,61 @@ std::unique_ptr<PrototypeAST> Parser::ParsePrototype() {
     if (CurrentToken.value != "(")
         throw std::runtime_error("parser error: expected '(' in prototype");
 
+    getNextToken(); // eat '('
     // read args
-    std::vector<std::string> ArgNames;
-    while (getNextToken().type == Token::type::tok_ident)
-        ArgNames.push_back(CurrentToken.value);
-    if (CurrentToken.value != ")")
-        throw std::runtime_error("parser error: missing terminating ')' in prototype");
+    std::vector<std::pair<std::string /* name */, Type /* type */>> Args;
+    if (CurrentToken.value != ")") {
+        while (true) { // loop through each arg
+            std::string ArgName;
+            std::string ArgTypeName;
+            bool ArgTypePointer = false;
+
+            if (CurrentToken.type == Token::type::tok_ident)
+                ArgName = CurrentToken.value;
+            else
+                return nullptr;
+
+            getNextToken(); // eat arg name
+
+            if (CurrentToken.value != ":")
+                throw std::runtime_error("parser error: expected ':' between arg name and type");
+            getNextToken(); // eat ':'
+
+            if (CurrentToken.type == Token::type::tok_ident)
+                ArgTypeName = CurrentToken.value;
+            else
+                return nullptr;
+
+            if (getNextToken().value == "*") { // eat type and check for pointer
+                ArgTypePointer = true;
+                getNextToken(); // eat '*'
+            }
+
+            Args.emplace_back(ArgName, Type(ArgTypeName, ArgTypePointer));
+
+            if (CurrentToken.value == ")")
+                break;
+
+            if (CurrentToken.value != ",")
+                throw std::runtime_error("parser error: expected only ')', ',', or expression in arg list");
+
+            getNextToken();
+        }
+    }
 
     getNextToken(); // eat ')'
 
     if (CurrentToken.value != ":")
         throw std::runtime_error("parser error: expected ':' before return type");
     getNextToken(); // eat ':'
-    std::string ReturnType = CurrentToken.value;
-    bool ReturnPointer = false;
+    std::string RetTypeName = CurrentToken.value;
+    bool RetTypePointer = false;
     if (getNextToken().value == "*") { // eat type and check for pointer
-        ReturnPointer = true;
+        RetTypePointer = true;
         getNextToken(); // eat '*'
     }
 
-    return std::make_unique<PrototypeAST>(Name, std::move(ArgNames), ReturnType, ReturnPointer);
+    return std::make_unique<PrototypeAST>(Name, std::move(Args), Type(RetTypeName, RetTypePointer));
 }
 
 std::unique_ptr<FunctionAST> Parser::ParseFuncDefinition() {

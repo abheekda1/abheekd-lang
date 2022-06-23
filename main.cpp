@@ -82,9 +82,9 @@ int main() {
     Lexer::Source =
                 //"\"test string\";\n"
                 "var a : i32;\n"
-                "extern puts() : s4;"
+                "extern puts(in : s1*) : s4;"
                 "func main() : s4 { return 0; }\n"
-                "func thing(arg1 arg2) : f8* {\n"
+                "func thing(arg1 : s4, arg2 : s4) : s4 {\n"
                 "\targ1 + arg2;\n"
                 //"\tprint(\"blah blah\");\n"
                 "\treturn arg1 + arg2 * 6;\n"

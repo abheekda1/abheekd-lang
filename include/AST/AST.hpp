@@ -16,6 +16,42 @@
 
 void InitializeModule();
 
+class Type {
+public:
+    inline Type(std::string Name, bool IsPointer) : Name(Name), IsPointer(IsPointer) {}
+
+    llvm::Type *GetLLVMType(llvm::LLVMContext &Ctx) const {
+        if (Name == "s1") {
+            if (IsPointer) return llvm::Type::getInt8PtrTy(Ctx);
+            return llvm::Type::getInt8Ty(Ctx);
+        } else if (Name == "s2") {
+            if (IsPointer) return llvm::Type::getInt16PtrTy(Ctx);
+            return llvm::Type::getInt16Ty(Ctx);
+        } else if (Name == "s4") {
+            if (IsPointer) return llvm::Type::getInt32PtrTy(Ctx);
+            return llvm::Type::getInt32Ty(Ctx);
+        } else if (Name == "s8") {
+            if (IsPointer) return llvm::Type::getInt64PtrTy(Ctx);
+            return llvm::Type::getInt64Ty(Ctx);
+        } else if (Name == "f4") {
+            if (IsPointer) return llvm::Type::getFloatPtrTy(Ctx);
+            return llvm::Type::getFloatTy(Ctx);
+        } else if (Name == "f8") {
+            if (IsPointer) return llvm::Type::getDoublePtrTy(Ctx);
+            return llvm::Type::getDoubleTy(Ctx);
+        } else if (Name == "void") {
+            if (IsPointer) return nullptr;
+            return llvm::Type::getVoidTy(Ctx);
+        } else {
+            return nullptr;
+        }
+    }
+
+private:
+    std::string Name;
+    bool IsPointer;
+};
+
 //----------------------------------------------------------
 // EXPRESSIONS
 //----------------------------------------------------------
@@ -134,43 +170,15 @@ private:
 
 class PrototypeAST {
 public:
-    PrototypeAST(std::string Name, std::vector<std::string> Args, std::string ReturnType, bool ReturnPointer);
+    PrototypeAST(std::string Name, std::vector<std::pair<std::string /* name */, Type /* type */>> Args, Type ReturnType);
     llvm::Function *codegen();
 
     inline const std::string getName() const { return Name; }
-    inline llvm::Type *getReturnType(llvm::LLVMContext &Ctx) const {
-        if (ReturnType == "s1") {
-            if (ReturnPointer) return llvm::Type::getInt8PtrTy(Ctx);
-            return llvm::Type::getInt8Ty(Ctx);
-        } else if (ReturnType == "s2") {
-            if (ReturnPointer) return llvm::Type::getInt16PtrTy(Ctx);
-            return llvm::Type::getInt16Ty(Ctx);
-        } else if (ReturnType == "s4") {
-            if (ReturnPointer) return llvm::Type::getInt32PtrTy(Ctx);
-            return llvm::Type::getInt32Ty(Ctx);
-        } else if (ReturnType == "s8") {
-            if (ReturnPointer) return llvm::Type::getInt64PtrTy(Ctx);
-            return llvm::Type::getInt64Ty(Ctx);
-        } else if (ReturnType == "f4") {
-            if (ReturnPointer) return llvm::Type::getFloatPtrTy(Ctx);
-            return llvm::Type::getFloatTy(Ctx);
-        } else if (ReturnType == "f8") {
-            if (ReturnPointer) return llvm::Type::getDoublePtrTy(Ctx);
-            return llvm::Type::getDoubleTy(Ctx);
-        } else if (ReturnType == "void") {
-            if (ReturnPointer) return nullptr;
-            return llvm::Type::getVoidTy(Ctx);
-        } else {
-            return nullptr;
-        }
-    }
-    inline const std::string getReturnTypeStr() const { return ReturnType; }
 
 private:
     std::string Name;
-    std::vector<std::string> Args;
-    std::string ReturnType;
-    bool ReturnPointer;
+    std::vector<std::pair<std::string, Type>> Args;
+    Type ReturnType;
 };
 
 // function definition
