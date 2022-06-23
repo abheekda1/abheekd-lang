@@ -20,11 +20,12 @@ public:
         // commands
         tok_func = -2,
         tok_extern = -3,
+        tok_return = -4,
 
         // primary
-        tok_ident = -4,
-        tok_number = -5,
-        tok_string = -6,
+        tok_ident = -20,
+        tok_number = -21,
+        tok_string = -22,
 
         //other
         tok_other = -100

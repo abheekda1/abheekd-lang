@@ -55,6 +55,8 @@ public:
     static std::unique_ptr<StatementAST> ParseExprStatement();
 
     static std::unique_ptr<StatementAST> ParseBlockStatement();
+
+    static std::unique_ptr<StatementAST> ParseReturnStatement();
     //STATEMENT END
 };
 

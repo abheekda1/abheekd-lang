@@ -25,6 +25,7 @@ Token Lexer::getTok() {
                     Position.column = 0;
                     break;
                 case ' ':
+                case '\t':
                     Position.column++;
                     break;
                 default:
@@ -43,12 +44,9 @@ Token Lexer::getTok() {
         CharIdx--; // go back one since one was added after the while loop
 
         // deal with keywords
-        if (t.value == "func") {
-            t.type = Token::type::tok_func;
-        }
-        if (t.value == "extern") {
-            t.type = Token::type::tok_extern;
-        }
+        if (t.value == "func") t.type = Token::type::tok_func;
+        if (t.value == "extern") t.type = Token::type::tok_extern;
+        if (t.value == "return") t.type = Token::type::tok_return;
 
         t.position = Position;
         Position.column += (int)t.value.length();

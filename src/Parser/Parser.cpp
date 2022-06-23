@@ -173,10 +173,15 @@ std::unique_ptr<PrototypeAST> Parser::ParseExtern() {
 }
 
 std::unique_ptr<StatementAST> Parser::ParseStatement() {
-    if (CurrentToken.value == "{") {
-        return ParseBlockStatement();
+    switch (CurrentToken.type) {
+        case Token::type::tok_return:
+            return ParseReturnStatement();
+        default:
+            if (CurrentToken.value == "{") {
+                return ParseBlockStatement();
+            }
+            return ParseExprStatement();
     }
-    return ParseExprStatement();
 }
 
 std::unique_ptr<StatementAST> Parser::ParseExprStatement() {
@@ -202,4 +207,17 @@ std::unique_ptr<StatementAST> Parser::ParseBlockStatement() {
 
     getNextToken(); // eat }
     return std::make_unique<BlockStatementAST>(std::move(Statements));
+}
+
+std::unique_ptr<StatementAST> Parser::ParseReturnStatement() {
+    getNextToken(); // eat "return"
+
+    if (auto Arg = ParseExpression()) {
+        if (CurrentToken.value != ";") {
+            throw std::runtime_error("parser error: missing semicolon at the end of return statement");
+        }
+        getNextToken(); // eat ';'
+        return std::make_unique<ReturnStatementAST>(std::move(Arg));
+    }
+    return nullptr;
 }
