@@ -137,7 +137,25 @@ public:
     PrototypeAST(std::string Name, std::vector<std::string> Args, std::string ReturnType);
     llvm::Function *codegen();
 
-    inline const std::string &getName() const { return Name; }
+    inline const std::string getName() const { return Name; }
+    inline llvm::Type *getReturnType(llvm::LLVMContext &Ctx) const {
+        if (ReturnType == "s1") {
+            return llvm::Type::getInt8Ty(Ctx);
+        } else if (ReturnType == "s2") {
+            return llvm::Type::getInt16Ty(Ctx);
+        } else if (ReturnType == "s4") {
+            return llvm::Type::getInt32Ty(Ctx);
+        } else if (ReturnType == "s8") {
+            return llvm::Type::getInt64Ty(Ctx);
+        } else if (ReturnType == "f4") {
+            return llvm::Type::getFloatTy(Ctx);
+        } else if (ReturnType == "f8") {
+            return llvm::Type::getDoubleTy(Ctx);
+        } else {
+            return nullptr;
+        }
+    }
+    inline const std::string getReturnTypeStr() const { return ReturnType; }
 
 private:
     std::string Name;

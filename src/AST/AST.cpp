@@ -118,13 +118,15 @@ PrototypeAST::PrototypeAST(std::string Name, std::vector<std::string> Args, std:
                            : Name(std::move(Name)), Args(std::move(Args)), ReturnType(std::move(ReturnType)) {}
 
 llvm::Function *PrototypeAST::codegen() {
-    // Make the function type:  double(double,double) etc.
+    // todo: specify types for args
     std::vector<Type*> Doubles(Args.size(),
                                Type::getDoubleTy(*TheContext));
-    FunctionType *FT =
-            FunctionType::get(Type::getDoubleTy(*TheContext), Doubles, false);
+    auto RetType = this->getReturnType(*TheContext);
+    if (!RetType) return nullptr;
+    FunctionType *FuncType =
+            FunctionType::get(RetType, Doubles, false);
     Function *F =
-            Function::Create(FT, Function::ExternalLinkage, Name, TheModule.get());
+            Function::Create(FuncType, Function::ExternalLinkage, Name, TheModule.get());
 
     // Set names for all arguments.
     unsigned Idx = 0;
