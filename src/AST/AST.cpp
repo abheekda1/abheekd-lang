@@ -52,7 +52,7 @@ Value *NumberExprAST::codegen() {
 StringExprAST::StringExprAST(std::string Value) : Value(std::move(Value)) {}
 
 llvm::Value *StringExprAST::codegen() {
-    return Builder->CreateGlobalStringPtr(llvm::StringRef(this->Value), "", 0, TheModule.get());
+    return Builder->CreateGlobalStringPtr(llvm::StringRef(this->Value), "string_lit", 0, TheModule.get());
 }
 
 /*Value *StringExprAST::codegen() {
