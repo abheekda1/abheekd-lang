@@ -204,8 +204,17 @@ llvm::Function *FunctionAST::codegen() {
         CurrentFuncNamedValues[Arg.getName().str()] = &Arg;
 
     if (Value *RetVal = Body->codegen()) {
-        if (TheFunction->getReturnType()->isIntegerTy())
-            RetVal = Builder->CreateFPToSI(RetVal, TheFunction->getReturnType());
+        if (TheFunction->getReturnType()->isIntegerTy()) {
+            if (RetVal->getType()->isFloatingPointTy())
+                RetVal = Builder->CreateFPToSI(RetVal, TheFunction->getReturnType());
+            else if (RetVal->getType()->isIntegerTy())
+                RetVal = Builder->CreateIntCast(RetVal, TheFunction->getReturnType(), true);
+        } else if (TheFunction->getReturnType()->isFloatingPointTy()) {
+            if (RetVal->getType()->isIntegerTy())
+                RetVal = Builder->CreateSIToFP(RetVal, TheFunction->getReturnType());
+            else if (RetVal->getType()->isFloatingPointTy())
+                RetVal = Builder->CreateFPCast(RetVal, TheFunction->getReturnType());
+        }
         Builder->CreateRet(RetVal);
 
         // Validate the generated code, checking for consistency.
