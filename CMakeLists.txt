@@ -21,5 +21,6 @@ include_directories(
 
 add_executable(abheek_lang ${SOURCE} main.cpp)
 
-llvm_map_components_to_libnames(llvm_libs support core irreader)
+llvm_map_components_to_libnames(llvm_libs support core irreader mc mcparser)
 target_link_libraries(abheek_lang ${llvm_libs})
+#target_link_libraries(abheek_lang LLVM-14)
