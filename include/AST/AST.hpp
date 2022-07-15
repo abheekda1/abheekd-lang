@@ -171,7 +171,7 @@ private:
 
 class PrototypeAST {
 public:
-    PrototypeAST(std::string Name, std::vector<std::pair<std::string /* name */, Type /* type */>> Args, Type ReturnType);
+    PrototypeAST(std::string Name, std::vector<std::pair<std::string /* name */, Type /* type */>> Args, Type ReturnType, bool IsVarArg);
     llvm::Function *codegen();
 
     inline const std::string getName() const { return Name; }
@@ -179,6 +179,7 @@ public:
 private:
     std::string Name;
     std::vector<std::pair<std::string, Type>> Args;
+    bool IsVarArg;
     Type ReturnType;
 };
 

@@ -1,4 +1,6 @@
+#include <fstream>
 #include <iostream>
+#include <sstream>
 
 #include "Lexer/Lexer.hpp"
 #include "Parser/Parser.hpp"
@@ -76,32 +78,37 @@ static void MainLoop() {
 }
 
 
-int main() {
-    /*Lexer::Source =
-                "extern puts(in : s1*) : s4;\n"
-                "func main() : s4 {\n"
-                "\tputs(\"hello world!\");\n"
-                "\treturn 0;\n"
-                "}\n"
-                "func thing(arg1 : s4, arg2 : s4) : s4 {\n"
-                "\targ1 + arg2;\n"
-                "\treturn arg1 + arg2 * 6;\n"
-                "};\n"
-                "\n"
-                "thing(1.0, 2.0);";*/
-    Lexer("extern puts(in : s1*) : s4;\n"
-          "func main() : s4 {\n"
-          "\tputs(\"hello world!\");\n"
-          "\treturn 0;\n"
-          "}\n");
-          // "func thing(arg1 : s4, arg2 : s4) : s4 {\n"
-          // "\targ1 + arg2;\n"
-          // "\treturn arg1 + arg2 * 6.0;\n"
-          // "};\n"
-          // "\n"
-          // "thing(1.0, 2.0);"); // todo: fix function stuff bc this call
-                               // is nested within the function instead
-                               // of being outside
+int main(int argc, char **argv) {
+    if (argc < 2) {
+        std::cerr << "please specify a file to compile!\n" << argv[0] << " [path to file]\n" << std::flush;
+        exit(EXIT_FAILURE);
+    }
+
+    std::ifstream ifs(argv[1]);
+    if (!ifs) {
+        std::cerr << "invalid file!" << std::endl;
+    }
+
+    std::stringstream temp;
+    temp << ifs.rdbuf();
+    Lexer(temp.str());
+
+    // Lexer(
+    //       //"extern puts(in : s1*) : s4;\n"
+    //       "extern printf(fmt : s1*, ...) : s4;"
+    //       "func main() : s4 {\n"
+    //       //"\tputs(\"hello world!\");\n"
+    //       "\tprintf(\"hello world!\");\n"
+    //       "\treturn 0;\n"
+    //       "}\n");
+    //       // "func thing(arg1 : s4, arg2 : s4) : s4 {\n"
+    //       // "\targ1 + arg2;\n"
+    //       // "\treturn arg1 + arg2 * 6.0;\n"
+    //       // "};\n"
+    //       // "\n"
+    //       // "thing(1.0, 2.0);"); // todo: fix function stuff bc this call
+    //                            // is nested within the function instead
+    //                            // of being outside
 
     std::cout << "SOURCE:\n---\n" << Lexer::Source << "\n---\n" << std::endl;
 

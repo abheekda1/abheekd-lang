@@ -117,6 +117,8 @@ std::unique_ptr<ExprAST> Parser::ParseBinOpRight(int ExprPrecedence, std::unique
 }
 
 std::unique_ptr<PrototypeAST> Parser::ParsePrototype() {
+    bool IsVarArg = false;
+
     if (CurrentToken.type != Token::type::tok_ident)
         throw std::runtime_error("parser error: expected function name in prototype");
 
@@ -135,9 +137,24 @@ std::unique_ptr<PrototypeAST> Parser::ParsePrototype() {
             std::string ArgTypeName;
             bool ArgTypePointer = false;
 
-            if (CurrentToken.type == Token::type::tok_ident)
+            // todo: instead of using other for ellipsis create custom token
+            if (CurrentToken.type == Token::type::tok_ident || CurrentToken.type == Token::type::tok_other) {
+                if (CurrentToken.value == ".") {
+                    getNextToken(); // eat first point in ellipsis
+                    if (CurrentToken.value == ".") {
+                        getNextToken(); // second
+                        if (CurrentToken.value == ".") {
+                            IsVarArg = true;
+                            getNextToken();
+                            if (CurrentToken.value != ")") {
+                                throw std::runtime_error("parser error: expected closing parenthesis after ellipsis");
+                            }
+                            break;
+                        }
+                    }
+                } 
                 ArgName = CurrentToken.value;
-            else
+            } else
                 return nullptr;
 
             getNextToken(); // eat arg name
@@ -180,7 +197,7 @@ std::unique_ptr<PrototypeAST> Parser::ParsePrototype() {
         getNextToken(); // eat '*'
     }
 
-    return std::make_unique<PrototypeAST>(Name, std::move(Args), Type(RetTypeName, RetTypePointer));
+    return std::make_unique<PrototypeAST>(Name, std::move(Args), Type(RetTypeName, RetTypePointer), IsVarArg);
 }
 
 std::unique_ptr<FunctionAST> Parser::ParseFuncDefinition() {

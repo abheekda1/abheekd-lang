@@ -54,7 +54,7 @@ Token Lexer::getTok() {
         return t;
     }
 
-    if (isdigit(LastChar) || LastChar == '.') {
+    if (isdigit(LastChar)/* || LastChar == '.'*/) {
         bool foundPoint = false;
 
         Token t(Token::type::tok_number);
