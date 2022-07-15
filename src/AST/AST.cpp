@@ -3,6 +3,15 @@
 //
 
 #include "AST/AST.hpp"
+#include "llvm/IR/LegacyPassManager.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/Host.h"
+#include "llvm/MC/TargetRegistry.h"
+#include "llvm/Support/TargetSelect.h"
+#include "llvm/Target/TargetMachine.h"
+#include "llvm/Target/TargetOptions.h"
+
+#include <iostream>
 
 #include <utility>
 #include <llvm/IR/Verifier.h>
@@ -17,8 +26,8 @@ using llvm::FunctionType;
 using llvm::IRBuilder;
 using llvm::LLVMContext;
 using llvm::Module;
-using llvm::StringRef;
 using llvm::Value;
+using llvm::TargetRegistry;
 
 // CODEGEN BEGIN
 static std::unique_ptr<LLVMContext> TheContext;
@@ -27,13 +36,20 @@ static std::unique_ptr<Module> TheModule;
 static std::map<std::string, Value *> CurrentFuncNamedValues;
 static std::map<std::string, Value *> GlobalNamedValues;
 
-void InitializeModule() {
+int InitializeModule() {
   // Open a new context and module.
   TheContext = std::make_unique<LLVMContext>();
   TheModule = std::make_unique<Module>("holy jit", *TheContext);
 
+  auto TargetTriple = llvm::sys::getDefaultTargetTriple();
+  std::cout << "found target triple: " << TargetTriple << '\n';
+
+  TheModule->setTargetTriple(TargetTriple);
+
   // Create a new builder for the module.
   Builder = std::make_unique<IRBuilder<>>(*TheContext);
+
+  return 0;
 }
 // CODEGEN END
 
@@ -41,6 +57,48 @@ void SaveModuleToFile(const std::string &path) {
   std::error_code EC;
   llvm::raw_fd_ostream out(path, EC);
   TheModule->print(out, nullptr);
+}
+
+int SaveObjectToFile(const std::string &path) {
+  std::error_code EC;
+  llvm::raw_fd_ostream out(path, EC, llvm::sys::fs::OF_None);
+  llvm::legacy::PassManager pass;
+  auto FileType = llvm::CGFT_ObjectFile;
+
+  using namespace llvm;
+  InitializeAllTargetInfos();
+  InitializeAllTargets();
+  InitializeAllTargetMCs();
+  InitializeAllAsmParsers();
+  InitializeAllAsmPrinters();
+
+  std::string Error;
+  auto Target = TargetRegistry::lookupTarget(TheModule->getTargetTriple(), Error);
+
+  // Print an error and exit if we couldn't find the requested target.
+  // This generally occurs if we've forgotten to initialise the
+  // TargetRegistry or we have a bogus target triple.
+  if (!Target) {
+    errs() << Error;
+    return 1;
+  }
+
+  auto CPU = "generic";
+  auto Features = "";
+
+  TargetOptions opt;
+  auto RM = Optional<Reloc::Model>();
+  auto TargetMachine = Target->createTargetMachine(TheModule->getTargetTriple(), CPU, Features, opt, RM);
+  TheModule->setDataLayout(TargetMachine->createDataLayout());
+
+  if (TargetMachine->addPassesToEmitFile(pass, out, nullptr, FileType)) {
+    errs() << "TargetMachine can't emit a file of this type";
+    return 1;
+  }
+
+  pass.run(*TheModule);
+  out.flush();
+  return 0;
 }
 
 ExprAST::~ExprAST() = default;
@@ -148,11 +206,12 @@ CallExprAST::CallExprAST(std::string Callee,
 Value *CallExprAST::codegen() {
   // Look up the name in the global module table.
   Function *CalleeF = TheModule->getFunction(Callee);
-  if (!CalleeF)
+  if (!CalleeF) {
     throw std::runtime_error("unknown function: \"" + Callee + "\"");
+  }
 
   // If argument mismatch error.
-  if (CalleeF->arg_size() != Args.size())
+  if (CalleeF->arg_size() != Args.size() && !CalleeF->isVarArg())
     throw std::runtime_error("incorrect # arguments passed: expected " +
                              std::to_string(Args.size()) + ", got " +
                              std::to_string(CalleeF->arg_size()));
@@ -225,7 +284,8 @@ llvm::Function *FunctionAST::codegen() {
   for (auto &Arg : TheFunction->args())
     CurrentFuncNamedValues[Arg.getName().str()] = &Arg;
 
-  if (Value *RetVal = Body->codegen()) {
+  Value *RetVal = Body->codegen();
+  if (true) {
     if (TheFunction->getReturnType()->isIntegerTy()) {
       if (RetVal->getType()->isFloatingPointTy())
         RetVal = Builder->CreateFPToSI(RetVal, TheFunction->getReturnType());
@@ -241,10 +301,13 @@ llvm::Function *FunctionAST::codegen() {
     Builder->CreateRet(RetVal);
 
     // Validate the generated code, checking for consistency.
-    llvm::verifyFunction(*TheFunction);
+    if(llvm::verifyFunction(*TheFunction)) {
+        return nullptr;
+    }
 
     return TheFunction;
   }
+
   TheFunction->eraseFromParent();
   return nullptr;
 }
@@ -271,7 +334,8 @@ llvm::Value *BlockStatementAST::codegen() {
         return C;
       }
     } else {
-      return nullptr;
+      // return nullptr;
+      throw std::runtime_error("codegen error: failed to compile function body");
     }
   }
   return nullptr;

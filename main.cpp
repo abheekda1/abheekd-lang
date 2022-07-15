@@ -144,6 +144,10 @@ int main(int argc, char **argv) {
 
     MainLoop();
 
+#ifdef DEBUG
     SaveModuleToFile(out_file);
     std::cout << "saved compiled LLVM IR to \"" << out_file << "\"!\n" << std::flush;
+#endif
+    SaveObjectToFile("out.o");
+    std::cout << "saved object file to \"" << "out.o" << "\"!\n" << std::flush;
 }

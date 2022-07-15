@@ -6,6 +6,7 @@
 #include <string>
 
 #include "Parser/Parser.hpp"
+#include "llvm/Support/Program.h"
 
 Token Parser::CurrentToken;
 

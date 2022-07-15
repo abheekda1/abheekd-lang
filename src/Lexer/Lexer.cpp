@@ -84,15 +84,66 @@ Token Lexer::getTok() {
 
         Position.column++; // preemptively increment for first quotation mark
         while((LastChar = Source[++CharIdx]) != '"' /* second mark */) { // move past first quotation mark
-            // TODO: handle escape codes
             if (LastChar == '\n' || CharIdx == Source.length())
                 throw std::runtime_error("lexer error: unterminated string");
-            t.value += LastChar;
-            Position.column++;
+            // TODO: handle escape codes: https://en.cppreference.com/w/cpp/language/escape
+            if (LastChar == '\\') {
+                LastChar = Source[++CharIdx];
+                Position.column++;
+                switch(LastChar) {
+                    case '\'':
+                        t.value += '\x27';
+                        break;
+                    case '"':
+                        t.value += '\x22';
+                        break;
+                    case '?':
+                        t.value += '\x3f';
+                        break;
+                    case '\\':
+                        t.value += '\x5c';
+                        break;
+                    case 'a':
+                        t.value += '\x7';
+                        break;
+                    case 'b':
+                        t.value += '\x8';
+                        break;
+                    case 'f':
+                        t.value += '\xc';
+                        break;
+                    case 'n':
+                        t.value += '\x0a';
+                        break;
+                    case 'r':
+                        t.value += '\x0d';
+                        break;
+                    case 't':
+                        t.value += '\x09';
+                        break;
+                    case 'v':
+                        t.value += '\x0b';
+                        break;
+                    // case 'x': // hexadecimal byte
+                    //     std::string temp;
+                    //     while (isdigit(LastChar = Source[++CharIdx])) {
+                    //         Position.column++;
+                    //         temp += LastChar;
+                    //         std::cout << temp << std::endl;
+                    //     }
+                    //     CharIdx--;
+                    //     std::cout << '\n' << std::stoull(temp) << std::endl;
+                    //     t.value += std::stoull(temp);
+                }
+                Position.column++;
+            } else {
+                t.value += LastChar;
+                Position.column++;
+            }
         }
-        CharIdx++; // move past second mark
-        Position.column++;
 
+        CharIdx++; // eat terminating '"'
+        Position.column++;
         return t;
     }
 
