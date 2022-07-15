@@ -1,0 +1,10 @@
+extern printf(fmt : s1*, ...) : s4;
+
+func helloWorld(name : s1*) : void {
+  printf("hello %s!\n", name);
+}
+
+func main() : s4 {
+  helloWorld("world");
+  return 0;
+}
