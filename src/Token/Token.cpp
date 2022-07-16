@@ -2,6 +2,7 @@
 // Created by abheekd on 6/21/2022.
 //
 
+#include <limits>
 #include <string>
 #include <utility>
 
@@ -12,7 +13,7 @@ std::map<std::string, int> Token::BinOpPrecedence;
 Token::Token() : type(type::tok_other) {}
 Token::Token(enum type type) : type(type) {}
 Token::Token(enum type type, std::string value, struct position position) :
-        type(type), value(std::move(value)), position(position) {}
+        type(type), value(std::move(value)), pos(position) {}
 
 void Token::InitBinOps() {
     Token::BinOpPrecedence["*"] = 5;

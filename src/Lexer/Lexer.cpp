@@ -49,7 +49,7 @@ Token Lexer::getTok() {
         if (t.value == "return") t.type = Token::type::tok_return;
         if (t.value == "var") t.type = Token::type::tok_var;
 
-        t.position = Position;
+        t.pos = Position;
         Position.column += (int)t.value.length();
         return t;
     }
@@ -58,7 +58,7 @@ Token Lexer::getTok() {
         bool foundPoint = false;
 
         Token t(Token::type::tok_number);
-        t.position = Position;
+        t.pos = Position;
         while (isdigit((LastChar = Source[CharIdx++])) || LastChar /* already set by prev cond */ == '.') {
             if (foundPoint) {
                 if (LastChar == '.') { // multiple decimal points
@@ -80,7 +80,7 @@ Token Lexer::getTok() {
 
     if (LastChar == '"') {
         Token t(Token::type::tok_string);
-        t.position = Position;
+        t.pos = Position;
 
         Position.column++; // preemptively increment for first quotation mark
         while((LastChar = Source[++CharIdx]) != '"' /* second mark */) { // move past first quotation mark
@@ -150,7 +150,7 @@ Token Lexer::getTok() {
     if (Token::BinOpPrecedence[{LastChar}]) { // check if first char is op
         Token t(Token::type::tok_binop);
         t.value = {LastChar};
-        t.position = Position;
+        t.pos = Position;
 
         CharIdx++; // move past first char
 

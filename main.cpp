@@ -122,8 +122,8 @@ int main(int argc, char **argv) {
     Token currentTok;
     while ((currentTok = Lexer::getTok()).type != Token::type::tok_eof) {
         printf("%3d:%-3d %10s %10d\n",
-               currentTok.position.row,
-               currentTok.position.column,
+               currentTok.pos.row,
+               currentTok.pos.column,
                currentTok.value.c_str(),
                currentTok.type
         );

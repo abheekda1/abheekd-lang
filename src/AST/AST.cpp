@@ -223,7 +223,10 @@ Value *CallExprAST::codegen() {
       return nullptr;
   }
 
-  return Builder->CreateCall(CalleeF, ArgsV, "call_tmp");
+  if (CalleeF->getReturnType()->isVoidTy())
+    return Builder->CreateCall(CalleeF, ArgsV);
+  else
+    return Builder->CreateCall(CalleeF, ArgsV, "call_tmp");
 }
 
 PrototypeAST::PrototypeAST(

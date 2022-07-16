@@ -48,7 +48,7 @@ public:
 
     type type;
     std::string value;
-    position position;
+    position pos;
 };
 
 
